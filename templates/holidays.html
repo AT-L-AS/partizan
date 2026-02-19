@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Праздники - Партизан{% endblock %}
+
+{% block content %}
+<section class="section-1">
+    <div class="container">
+        <h1 class="page-title">Детские праздники</h1>
+        <div class="holid-filters-container">
+            <div class="holid-categories-filter">
+                <a href="{% url 'holidays' %}" class="holid-category-btn {% if not request.GET.category and not request.resolver_match.kwargs.category_slug %}active{% endif %}">
+                    Все праздники
+                </a>
+                {% for category in categories %}
+                <a href="{% url 'holidays_by_category' category.slug %}" 
+                   class="holid-category-btn 
+                   {% if request.resolver_match.kwargs.category_slug == category.slug %}active{% endif %}
+                   {% if request.GET.category == category.slug|stringformat:'s' %}active{% endif %}">
+                    {{ category.name }}
+                </a>
+                {% endfor %}
+            </div>
+                        <div class="holid-age-filter">
+                <h3>Подобрать по возрасту</h3>
+                <form method="get" id="holid-age-filter-form" class="holid-age-filter-form">
+                    {% if request.resolver_match.kwargs.category_slug %}
+                    <input type="hidden" name="category" value="{{ request.resolver_match.kwargs.category_slug }}">
+                    {% elif request.GET.category %}
+                    <input type="hidden" name="category" value="{{ request.GET.category }}">
+                    {% endif %}
+                    
+                    <div class="holid-age-input-group">
+                        <label for="child-age">Возраст ребенка:</label>
+                        <div class="holid-age-slider-container">
+                            <input type="range" id="child-age-slider" name="age" min="4" max="30" value="{{ request.GET.age|default:6 }}" class="holid-age-slider">
+                            <span class="holid-age-value" id="holid-age-value">{{ request.GET.age|default:6 }} лет</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Подобрать праздники</button>
+                    {% if request.GET.age %}
+                    <a href="{% if request.resolver_match.kwargs.category_slug %}
+                                {% url 'holidays_by_category' request.resolver_match.kwargs.category_slug %}
+                             {% else %}
+                                {% url 'holidays' %}
+                             {% endif %}" class="btn holid-btn-secondary">Сбросить возраст</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+        
+        {% if request.GET.age %}
+        <div class="holid-filter-results-info">
+            <p>Найдено праздников для детей {{ request.GET.age }} лет: <strong>{{ holidays|length }}</strong></p>
+        </div>
+        {% endif %}
+        
+        <div class="holidays-container">
+            {% for holiday in holidays %}
+            <div class="holiday-card-large">
+                {% if holiday.image %}
+                <img src="{{ holiday.image.url }}" alt="{{ holiday.title }}" class="holiday-image">
+                {% endif %}
+                <div class="holiday-info">
+                    <h3>{{ holiday.title }}</h3>
+                    <p class="holiday-category">{{ holiday.category.name }}</p>
+                    
+                    <div class="holid-holiday-meta">
+                        <p class="holiday-duration"><i class="far fa-clock"></i> {{ holiday.duration }}</p>
+                        <p class="holiday-age"><i class="fas fa-child"></i> {{ holiday.min_age }}-{{ holiday.max_age }} лет</p>
+                        {% if request.GET.age and holiday.min_age <= request.GET.age|add:0 and holiday.max_age >= request.GET.age|add:0 %}
+                        <span class="holid-age-match-badge">✓ Подходит для {{ request.GET.age }} лет</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="holiday-description">
+                        {{ holiday.description|truncatechars:200 }}
+                    </div>
+                    
+                    <div class="holiday-actions">
+                        <span class="price">{{ holiday.price }} ₽</span>
+                        <a href="{% url 'holiday_detail' holiday.slug %}" class="btn btn-primary">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-message">
+                <p>Праздники по вашему запросу не найдены</p>
+                {% if request.GET.age %}
+                <p>Попробуйте выбрать другой возраст или <a href="{% url 'holidays' %}">посмотреть все праздники</a></p>
+                {% else %}
+                <p>Праздники в этой категории пока не добавлены</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

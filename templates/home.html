@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Главная - Партизан{% endblock %}
+
+{% block content %}
+<section class="home-hero">
+    <div class="home-container">
+        <div class="home-hero-content">
+            <h2 class="home-hero-title">Развлекательный центр "Партизан"</h2>
+            <p class="home-hero-subtitle">Развиваем таланты, воспитываем чемпионов!</p>
+            <div class="home-hero-buttons">
+                <a href="{% url 'trainings' %}" class="home-btn home-btn-primary home-btn-large">Начать тренировки</a>
+                <a href="{% url 'holidays' %}" class="home-btn home-btn-outline home-btn-large">Детские праздники</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="home-features">
+    <div class="home-container">
+        <h2 class="home-section-title">Почему выбирают нас</h2>
+        <div class="home-features-grid">
+            <div class="home-feature-card">
+                <div class="home-feature-icon">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <h3>10+ лет опыта</h3>
+                <p>Работаем с 2014 года, тысячи довольных клиентов</p>
+            </div>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>Профессиональные тренеры</h3>
+                <p>Мастера спорта и опытные педагоги</p>
+            </div>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">
+                    <i class="fas fa-bullseye"></i>
+                </div>
+                <h3>Современное оборудование</h3>
+                <p>Лазертаг, VR, полосы препятствий</p>
+            </div>
+            <div class="home-feature-card">
+                <div class="home-feature-icon">
+                    <i class="fas fa-birthday-cake"></i>
+                </div>
+                <h3>Праздники под ключ</h3>
+                <p>Организация дней рождений и мероприятий</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="home-achievements">
+    <div class="home-container">
+        <h2 class="home-section-title">Наши достижения</h2>
+        <div class="home-achievements-grid">
+            {% for achievement in achievements %}
+            <div class="home-achievement-card">
+                <div class="home-achievement-image-wrapper">
+                    {% if achievement.image %}
+                    <img src="{{ achievement.image.url }}" alt="{{ achievement.title }}" class="home-achievement-image">
+                    {% else %}
+                    <div class="home-achievement-placeholder">
+                        <i class="fas fa-medal"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="home-achievement-content">
+                    <h3>{{ achievement.title }}</h3>
+                    <div class="home-achievement-meta">
+                        <span class="home-achievement-date">
+                            <i class="far fa-calendar-alt"></i> {{ achievement.date|date:"d.m.Y" }}
+                        </span>
+                        <span class="home-achievement-place">{{ achievement.get_place_text }}</span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="home-empty-state">
+                <i class="fas fa-trophy"></i>
+                <p>Скоро здесь появятся достижения</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="home-text-center">
+            <a href="{% url 'achievements' %}" class="home-btn home-btn-secondary">Все достижения <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+
+<section class="home-holidays">
+    <div class="home-container">
+        <h2 class="home-section-title">Праздники для детей</h2>
+        <div class="home-holidays-grid">
+            {% for holiday in holidays %}
+            <div class="home-holiday-card">
+                <div class="home-holiday-image-wrapper">
+                    {% if holiday.image %}
+                    <img src="{{ holiday.image.url }}" alt="{{ holiday.title }}" class="home-holiday-image">
+                    {% else %}
+                    <div class="home-holiday-placeholder">
+                        <i class="fas fa-birthday-cake"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="home-holiday-content">
+                    <h3>{{ holiday.title }}</h3>
+                    <div class="home-holiday-meta">
+                        <span class="home-holiday-duration">
+                            <i class="far fa-clock"></i> {{ holiday.duration }}
+                        </span>
+                        <span class="home-holiday-age">
+                            <i class="fas fa-child"></i> {{ holiday.min_age }}-{{ holiday.max_age }} лет
+                        </span>
+                    </div>
+                    <div class="home-holiday-footer">
+                        <span class="home-holiday-price">{{ holiday.price }} ₽</span>
+                        <a href="{% url 'holiday_detail' holiday.slug %}" class="home-btn home-btn-primary home-btn-small">Подробнее</a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="home-empty-state">
+                <i class="fas fa-birthday-cake"></i>
+                <p>Скоро появятся новые праздники</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="home-text-center">
+            <a href="{% url 'holidays' %}" class="home-btn home-btn-secondary">Все праздники <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </div>
+</section>
+
+<section class="home-reviews">
+    <div class="home-container">
+        <h2 class="home-section-title home-section-title-light">Отзывы наших клиентов</h2>
+        
+        {% if reviews %}
+        <div class="home-reviews-slider-container">
+            <button class="home-slider-btn home-slider-prev" id="review-prev" aria-label="Предыдущий отзыв">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            
+            <div class="home-reviews-slider" id="review-slider">
+                <div class="home-reviews-track" id="review-track">
+                    {% for review in reviews %}
+                    <div class="home-review-slide">
+                        <div class="home-review-card">
+                            <div class="home-review-rating">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= review.rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="home-review-text">"{{ review.text }}"</p>
+                            <div class="home-review-footer">
+                                <span class="home-review-name">{{ review.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <button class="home-slider-btn home-slider-next" id="review-next" aria-label="Следующий отзыв">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+        {% else %}
+        <div class="home-empty-state home-empty-state-light">
+            <i class="fas fa-comments"></i>
+            <p>Пока нет отзывов</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+
+</script>
+{% endblock %}

@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Тренировки - Партизан{% endblock %}
+
+{% block content %}
+<section class="trainings-section">
+    <div class="container-2">
+        <h1 class="page-title">Наши тренировки</h1>
+        <p class="page-subtitle">Профессиональные занятия для всех возрастов</p>
+        
+        <div class="pricing-info">
+            <div class="pricing-card">
+                <h3><i class="fas fa-money-bill-wave"></i> Стоимость занятий</h3>
+                <div class="price-item">
+                    <span class="price-label">Абонемент на 8 занятий:</span>
+                    <span class="price-amount">4 000 ₽</span>
+                </div>
+                <div class="price-item">
+                    <span class="price-label">Разовое посещение:</span>
+                    <span class="price-amount">700 ₽</span>
+                </div>
+                <div class="price-item">
+                    <span class="price-label">Пробное занятие:</span>
+                    <span class="price-amount">Бесплатно</span>
+                </div>
+                <div class="price-features">
+                    <p><i class="fas fa-check-circle"></i> Все включено</p>
+                    <p><i class="fas fa-check-circle"></i> Без скрытых платежей</p>
+                    <p><i class="fas fa-check-circle"></i> Заморозка абонемента</p>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> Что нужно знать</h3>
+                <ul>
+                    <li>Медицинская справка не требуется</li>
+                    <li>Форма для занятий: спортивный костюм, кроссовки</li>
+                    <li>Все необходимые снаряды предоставляются</li>
+                    <li>Раздевалки в наличии</li>
+                    <li>Бесплатная парковка для родителей</li>
+                </ul>
+            </div>
+        </div>
+                <div class="age-groups">
+            <h2 class="section-title">Возрастные группы</h2>
+            
+            <div class="groups-grid">
+                <div class="group-card">
+                    <div class="group-header" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                        <h3>Дети до 13 лет</h3>
+                    </div>
+                    <div class="group-content">
+                        <div class="group-info">
+                            <p><strong>Тренеры:</strong> Сергей Петров</p>
+                            <p><strong>Расписание:</strong> Пн, Ср, Пт - 16:00-17:30</p>
+                            <p><strong>Уровень:</strong> Начальный, средний</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="group-card">
+                    <div class="group-header" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                        <h3>Подростки 13-16 лет</h3>
+                    </div>
+                    <div class="group-content">
+                        <div class="group-info">
+                            <p><strong>Тренеры:</strong> Дмитрий Смирнов, Ольга Кузнецова</p>
+                            <p><strong>Расписание:</strong> Вт, Чт, Сб - 17:00-18:30</p>
+                            <p><strong>Уровень:</strong> Средний, продвинутый</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="group-card">
+                    <div class="group-header" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                        <h3>Взрослые 17+</h3>
+                    </div>
+                    <div class="group-content">
+                        <div class="group-info">
+                            <p><strong>Тренеры:</strong> Александр Волков, Мария Соколова</p>
+                            <p><strong>Расписание:</strong> Пн-Пт - 19:00-21:00</p>
+                            <p><strong>Уровень:</strong> Любой</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="best-groups">
+            <h2 class="section-title">Лучшие команды</h2>
+            <div class="photos-grid">
+                <div class="photo-item">
+                    <img src="{% static 'images/group1.jpg' %}" alt="Детская группа" class="group-photo">
+                    <div class="photo-caption">
+                        <h4>"Заволжье"</h4>
+                        <p>Победители ПФО, 18-21</p>
+                    </div>
+                </div>
+                <div class="photo-item">
+                    <img src="{% static 'images/group2.jpg' %}" alt="Подростковая группа" class="group-photo">
+                    <div class="photo-caption">
+                        <h4>"Спас"</h4>
+                        <p>3х кратные победители чемпионата России, 22+</p>
+                    </div>
+                </div>
+                <div class="photo-item">
+                    <img src="{% static 'images/group3.jpg' %}" alt="Взрослая группа" class="group-photo">
+                    <div class="photo-caption">
+                        <h4>"Форест Гамп"</h4>
+                        <p>Чемпионы России, 35+</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="registration-form-section">
+            <h2 class="section-title">Запись на тренировку</h2>
+            
+            <div class="form-container">
+                <form id="training-registration-form" class="registration-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="parent-name"><i class="fas fa-user"></i> Имя родителя *</label>
+                            <input type="text" id="parent-name" name="parent_name" required 
+                                   placeholder="Введите ваше имя">
+                        </div>
+                        <div class="form-group">
+                            <label for="parent-phone"><i class="fas fa-phone"></i> Телефон *</label>
+                            <input type="tel" id="parent-phone" name="phone" required 
+                                   placeholder="+7 (999) 123-45-67">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="child-name"><i class="fas fa-child"></i> Имя ребенка *</label>
+                            <input type="text" id="child-name" name="child_name" required 
+                                   placeholder="Введите имя ребенка">
+                        </div>
+                        <div class="form-group">
+                            <label for="child-age"><i class="fas fa-birthday-cake"></i> Возраст ребенка *</label>
+                            <input type="number" id="child-age" name="age" min="3" max="50" required 
+                                   placeholder="Возраст">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="age-group"><i class="fas fa-users"></i> Выберите группу *</label>
+                        <select id="age-group" name="age_group" required>
+                            <option value="">-- Выберите группу --</option>
+                            <option value="under_13">Дети до 13 лет (16:00-17:30 Пн/Ср/Пт)</option>
+                            <option value="13_16">Подростки 13-16 лет (17:00-18:30 Вт/Чт/Сб)</option>
+                            <option value="adult">Взрослые 17+ (19:00-21:00 Пн-Пт, 10:00-12:00 Сб)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="visit-type"><i class="fas fa-calendar-check"></i> Тип посещения</label>
+                        <select id="visit-type" name="visit_type">
+                            <option value="trial">Пробное занятие (бесплатно)</option>
+                            <option value="single">Разовое посещение (700 ₽)</option>
+                            <option value="subscription">Абонемент 8 занятий (4 000 ₽)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-footer">
+                        <div class="form-notice">
+                            <p><i class="fas fa-exclamation-circle"></i> После отправки заявки наш менеджер свяжется с вами в течение 2 часов</p>
+                        </div>
+                        <button type="submit" class="submit-btn">
+                            <i class="fas fa-paper-plane"></i> Отправить заявку
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+
+</script>
+{% endblock %}

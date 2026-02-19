@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Партизан - {% block title %}Главная{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1><a href="{% url 'home' %}">Партизан</a></h1>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">Главная</a></li>
+                    <li><a href="{% url 'achievements' %}" class="{% if 'achievements' in request.path %}active{% endif %}">Достижения</a></li>
+                    <li><a href="{% url 'trainings' %}" class="{% if 'trainings' in request.path %}active{% endif %}">Тренировки</a></li>
+                    <li><a href="{% url 'about' %}" class="{% if 'about' in request.path %}active{% endif %}">О нас</a></li>
+                    <li><a href="{% url 'holidays' %}" class="{% if 'holidays' in request.path %}active{% endif %}">Праздники</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Контактная информация</h3>
+                    <div class="contact-info">
+                        <p><i class="fas fa-map-marker-alt"></i> г. Москва, ул. Спортивная, д. 10</p>
+                        <p><i class="fas fa-phone"></i> +7 (999) 123-45-67</p>
+                        <p><i class="fas fa-envelope"></i> info@partizan.ru</p>
+                        <p><i class="fas fa-clock"></i> Пн-Пт: 9:00-21:00, Сб-Вс: 10:00-19:00</p>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <div class="footer-links">
+                        <div class="link-group">
+                            <h4>Основное</h4>
+                            <ul class="link-color">
+                                <li><a href="{% url 'home' %}"><span class="link-icon">🏠</span> Главная</a></li>
+                                <li><a href="{% url 'about' %}"><span class="link-icon">👥</span> О нас</a></li>
+                                <li><a href="{% url 'holidays' %}"><span class="link-icon">🎉</span> Праздники</a></li>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-section">
+                    <div class="footer-links">
+                        <div class="link-group">
+                            <h4>Занятия</h4>
+                            <ul class="link-color">
+                                <li><a href="{% url 'trainings' %}"><span class="link-icon">⚽</span> Тренировки</a></li>
+                                <li><a href="{% url 'achievements' %}"><span class="link-icon">🏆</span> Достижения</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 Развлекательный центр "Партизан". Все права защищены.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+
+</html>

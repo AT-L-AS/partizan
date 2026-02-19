@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Достижения - Партизан{% endblock %}
+
+{% block content %}
+<section class="achievements-section">
+    <div class="container">
+        <div class="achievements-header">
+            <h1 class="page-title">Наши спортивные достижения</h1>
+            <p class="page-subtitle">Победы и награды наших воспитанников на соревнованиях</p>
+        </div>
+
+        {% if achievements %}
+        <div class="achievements-grid" id="achievements-grid">
+            {% for achievement in achievements %}
+            <div class="achievement-card" data-place="{{ achievement.place }}" data-city="{{ achievement.city }}">
+                <div class="achievement-media">
+                    {% if achievement.image %}
+                    <div class="achievement-image">
+                        <img src="{{ achievement.image.url }}" alt="{{ achievement.title }}" loading="lazy">
+                        <div class="achievement-date-badge">
+                            <span class="date-day">{{ achievement.date|date:"d" }}</span>
+                            <span class="date-month">{{ achievement.date|date:"M"|lower }}</span>
+                            <span class="date-year">{{ achievement.date|date:"Y" }}</span>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="achievement-image-placeholder">
+                        {{ achievement.get_place_icon }}
+                    </div>
+                    {% endif %}
+
+                    <div class="achievement-category">
+                        <span class="place-badge place-{{ achievement.place }}">
+                            {{ achievement.get_place_icon }} {{ achievement.get_place_text }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="achievement-content">
+                    <h3 class="achievement-title">{{ achievement.title }}</h3>
+
+                    <div class="achievement-meta">
+                        <div class="meta-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ achievement.city }}</span>
+                        </div>
+                        {% if achievement.age_category %}
+                        <div class="meta-item">
+                            <i class="fas fa-user-friends"></i>
+                            <span>{{ achievement.age_category }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h3>Пока нет достижений</h3>
+            <p>Наши спортсмены активно готовятся к новым победам!</p>
+            <a href="{% url 'home' %}" class="btn-achievements btn-primary">
+                <i class="fas fa-home"></i> Вернуться на главную
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
