@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // ========== ФОРМА ОТЗЫВОВ ==========
     const reviewForm = document.getElementById('review-form');
     if (reviewForm) {
         reviewForm.addEventListener('submit', function(e) {
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // ========== ДАТЫ ДЛЯ ПРАЗДНИКОВ ==========
     const dateSelect = document.getElementById('date-select');
     if (dateSelect) {
         const holidayId = document.querySelector('input[name="holiday_id"]').value;
@@ -47,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // ========== ВАЛИДАЦИЯ ФОРМ ==========
     const forms = document.querySelectorAll('form');
     forms.forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -69,6 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // ========== МАСКА ДЛЯ ТЕЛЕФОНА ==========
     const phoneInputs = document.querySelectorAll('input[type="tel"]');
     phoneInputs.forEach(input => {
         input.addEventListener('input', function(e) {
@@ -88,173 +92,193 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Получаем элементы слайдера
-    const track = document.getElementById('review-track'); // Дорожка со слайдами
-    const slides = document.querySelectorAll('.home-review-slide'); // Все слайды
-    const prevBtn = document.getElementById('review-prev'); // Кнопка "назад"
-    const nextBtn = document.getElementById('review-next'); // Кнопка "вперед"
+    // ========== СЛАЙДЕР ОТЗЫВОВ ==========
+    const track = document.getElementById('review-track');
+    const slides = document.querySelectorAll('.home-review-slide');
+    const prevBtn = document.getElementById('review-prev');
+    const nextBtn = document.getElementById('review-next');
     
-    // Если нет слайдера или слайдов - выходим
-    if (!track || slides.length === 0) return;
-    
-    // Текущие настройки
-    let currentIndex = 0; // Текущий индекс
-    let slidesPerView = getSlidesPerView(); // Сколько слайдов показываем
-    const totalSlides = slides.length; // Всего слайдов
-    const maxIndex = Math.max(0, totalSlides - slidesPerView); // Максимальный индекс
-    
-    /* Определяет сколько слайдов показывать в зависимости от ширины экрана    */
-    function getSlidesPerView() {
-        if (window.innerWidth <= 768) return 1; 
-        if (window.innerWidth <= 992) return 2; 
-        return 3;
-    }
-    
-    /* Обновляет позицию слайдера */
-    function updateSlider() {
-        const slideWidth = slides[0].offsetWidth; // Ширина одного слайда
-        const gap = 25; // Отступ между слайдами (должен совпадать с CSS)
-        const translateX = currentIndex * (slideWidth + gap); // Смещение
+    if (track && slides.length > 0) {
+        let currentIndex = 0;
+        let slidesPerView = getSlidesPerView();
+        const totalSlides = slides.length;
+        const maxIndex = Math.max(0, totalSlides - slidesPerView);
         
-        track.style.transform = `translateX(-${translateX}px)`; // Двигаем дорожку
+        function getSlidesPerView() {
+            if (window.innerWidth <= 768) return 1; 
+            if (window.innerWidth <= 992) return 2; 
+            return 3;
+        }
         
-        // Обновляем состояние кнопок
+        function updateSlider() {
+            const slideWidth = slides[0].offsetWidth;
+            const gap = 25;
+            const translateX = currentIndex * (slideWidth + gap);
+            
+            track.style.transform = `translateX(-${translateX}px)`;
+            
+            if (prevBtn) prevBtn.disabled = currentIndex === 0;
+            if (nextBtn) nextBtn.disabled = currentIndex >= maxIndex;
+        }
+        
         if (prevBtn) {
-            prevBtn.disabled = currentIndex === 0; // Блокируем "назад" если первый слайд
+            prevBtn.addEventListener('click', function() {
+                if (currentIndex > 0) {
+                    currentIndex--;
+                    updateSlider();
+                }
+            });
         }
         
         if (nextBtn) {
-            nextBtn.disabled = currentIndex >= maxIndex; // Блокируем "вперед" если последний
-        }
-    }
-    
-    // Обработчики для кнопок
-    if (prevBtn) {
-        prevBtn.addEventListener('click', function() {
-            if (currentIndex > 0) {
-                currentIndex--; // Листаем назад
-                updateSlider();
-            }
-        });
-    }
-    
-    if (nextBtn) {
-        nextBtn.addEventListener('click', function() {
-            if (currentIndex < maxIndex) {
-                currentIndex++; // Листаем вперед
-                updateSlider();
-            }
-        });
-    }
-    
-    // Обработка изменения размера окна
-    let resizeTimeout;
-    window.addEventListener('resize', function() {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(function() {
-            const newSlidesPerView = getSlidesPerView();
-            if (newSlidesPerView !== slidesPerView) {
-                slidesPerView = newSlidesPerView;
-                const newMaxIndex = Math.max(0, totalSlides - slidesPerView);
-                currentIndex = Math.min(currentIndex, newMaxIndex); // Корректируем индекс
-                updateSlider();
-            } else {
-                updateSlider();
-            }
-        }, 250);
-    });
-    
-    // Поддержка свайпов на мобильных устройствах
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    track.addEventListener('touchstart', function(e) {
-        touchStartX = e.changedTouches[0].screenX; // Запоминаем где начали касание
-    }, { passive: true });
-    
-    track.addEventListener('touchend', function(e) {
-        touchEndX = e.changedTouches[0].screenX; // Запоминаем где закончили
-        handleSwipe(); // Обрабатываем свайп
-    }, { passive: true });
-    
-    /* Обрабатывает свайп влево/вправо*/
-    function handleSwipe() {
-        const swipeThreshold = 50; // Минимальная длина свайпа
-        const diff = touchStartX - touchEndX; // Разница между началом и концом
-        
-        if (Math.abs(diff) > swipeThreshold) {
-            if (diff > 0 && currentIndex < maxIndex) {
-                // Свайп влево - листаем вперед
-                currentIndex++;
-                updateSlider();
-            } else if (diff < 0 && currentIndex > 0) {
-                // Свайп вправо - листаем назад
-                currentIndex--;
-                updateSlider();
-            }
-        }
-    }
-    
-    // Автоматическая прокрутка
-    let autoplayInterval;
-    let isHovering = false;
-    
-    /* Запускает автоматическую прокрутку */
-    function startAutoplay() {
-        if (autoplayInterval) clearInterval(autoplayInterval);
-        autoplayInterval = setInterval(() => {
-            if (!isHovering && slides.length > slidesPerView) {
+            nextBtn.addEventListener('click', function() {
                 if (currentIndex < maxIndex) {
-                    currentIndex++; // Листаем вперед
-                } else {
-                    currentIndex = 0; // Возвращаемся в начало
+                    currentIndex++;
+                    updateSlider();
                 }
-                updateSlider();
-            }
-        }, 2500); // Прокрутка
-    }
-    
-    /* Останавливает автоматическую прокрутку */
-    function stopAutoplay() {
-        if (autoplayInterval) {
-            clearInterval(autoplayInterval);
+            });
         }
-    }
-    
-    // Запускаем автопрокрутку
-    startAutoplay();
-    
-    // Останавливаем при наведении мыши
-    const sliderContainer = document.querySelector('.home-reviews-slider-container');
-    if (sliderContainer) {
-        sliderContainer.addEventListener('mouseenter', function() {
-            isHovering = true;
-            stopAutoplay(); // Останавливаем
+        
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                const newSlidesPerView = getSlidesPerView();
+                if (newSlidesPerView !== slidesPerView) {
+                    slidesPerView = newSlidesPerView;
+                    const newMaxIndex = Math.max(0, totalSlides - slidesPerView);
+                    currentIndex = Math.min(currentIndex, newMaxIndex);
+                    updateSlider();
+                } else {
+                    updateSlider();
+                }
+            }, 250);
         });
         
-        sliderContainer.addEventListener('mouseleave', function() {
-            isHovering = false;
-            startAutoplay(); // Запускаем снова
+        // Свайпы
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        track.addEventListener('touchstart', function(e) {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        track.addEventListener('touchend', function(e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0 && currentIndex < maxIndex) {
+                    currentIndex++;
+                    updateSlider();
+                } else if (diff < 0 && currentIndex > 0) {
+                    currentIndex--;
+                    updateSlider();
+                }
+            }
+        }
+        
+        // Автопрокрутка
+        let autoplayInterval;
+        let isHovering = false;
+        
+        function startAutoplay() {
+            if (autoplayInterval) clearInterval(autoplayInterval);
+            autoplayInterval = setInterval(() => {
+                if (!isHovering && slides.length > slidesPerView) {
+                    if (currentIndex < maxIndex) {
+                        currentIndex++;
+                    } else {
+                        currentIndex = 0;
+                    }
+                    updateSlider();
+                }
+            }, 2500);
+        }
+        
+        function stopAutoplay() {
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+            }
+        }
+        
+        startAutoplay();
+        
+        const sliderContainer = document.querySelector('.home-reviews-slider-container');
+        if (sliderContainer) {
+            sliderContainer.addEventListener('mouseenter', function() {
+                isHovering = true;
+                stopAutoplay();
+            });
+            
+            sliderContainer.addEventListener('mouseleave', function() {
+                isHovering = false;
+                startAutoplay();
+            });
+        }
+        
+        updateSlider();
+        
+        window.addEventListener('beforeunload', function() {
+            if (autoplayInterval) {
+                clearInterval(autoplayInterval);
+            }
         });
     }
-    
-    // Инициализация - показываем первую позицию
-    updateSlider();
-    
-    // Очищаем интервал при уходе со страницы
-    window.addEventListener('beforeunload', function() {
-        if (autoplayInterval) {
-            clearInterval(autoplayInterval);
-        }
-    });
-});
 
+    // ========== БУРГЕР-МЕНЮ ==========
+    const burgerMenu = document.getElementById('burger-menu');
+    const mainNav = document.getElementById('main-nav');
+    
+    if (burgerMenu && mainNav) {
+        burgerMenu.addEventListener('click', function() {
+            this.classList.toggle('active');
+            mainNav.classList.toggle('active');
+            
+            // Блокируем прокрутку body при открытом меню
+            if (mainNav.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
+        });
 
-// holiday
-document.addEventListener('DOMContentLoaded', function() {
+        // Закрытие меню при клике на ссылку
+        const navLinks = mainNav.querySelectorAll('a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                burgerMenu.classList.remove('active');
+                mainNav.classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Закрытие меню при клике вне его
+        document.addEventListener('click', function(event) {
+            if (!mainNav.contains(event.target) && !burgerMenu.contains(event.target)) {
+                burgerMenu.classList.remove('active');
+                mainNav.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+
+        // Обработка изменения размера окна
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                burgerMenu.classList.remove('active');
+                mainNav.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // ========== СЛАЙДЕР ВОЗРАСТА (HOLIDAY) ==========
     const ageSlider = document.getElementById('child-age-slider');
     const ageValue = document.getElementById('holid-age-value');
     
@@ -263,48 +287,51 @@ document.addEventListener('DOMContentLoaded', function() {
             ageValue.textContent = this.value + ' лет';
         });
     }
-});
 
-// Сохраняем категорию при отправке формы возраста
-document.getElementById('holid-age-filter-form')?.addEventListener('submit', function(e) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const pathSegments = window.location.pathname.split('/');
-    const categoryFromPath = pathSegments[pathSegments.indexOf('holidays') + 1];
-    
-    // Если есть категория в URL и нет скрытого поля, добавляем
-    if (categoryFromPath && categoryFromPath !== 'holidays' && !this.querySelector('input[name="category"]')) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'category';
-        input.value = categoryFromPath;
-        this.appendChild(input);
+    // ========== ФИЛЬТР ВОЗРАСТА (HOLIDAY) ==========
+    document.getElementById('holid-age-filter-form')?.addEventListener('submit', function(e) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const pathSegments = window.location.pathname.split('/');
+        const categoryFromPath = pathSegments[pathSegments.indexOf('holidays') + 1];
+        
+        if (categoryFromPath && categoryFromPath !== 'holidays' && !this.querySelector('input[name="category"]')) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'category';
+            input.value = categoryFromPath;
+            this.appendChild(input);
+        }
+    });
+
+    // ========== РЕГИСТРАЦИЯ НА ТРЕНИРОВКУ ==========
+    const trainingForm = document.getElementById('training-registration-form');
+    if (trainingForm) {
+        trainingForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            
+            fetch('/api/register-training/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Заявка отправлена! Мы свяжемся с вами в ближайшее время.');
+                    this.reset();
+                } else {
+                    alert('Ошибка: ' + (data.message || 'Попробуйте еще раз'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Произошла ошибка при отправке заявки');
+            });
+        });
     }
 });
-   
-// trainings
-document.getElementById('training-registration-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    
-    fetch('/api/register-training/', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Заявка отправлена! Мы свяжемся с вами в ближайшее время.');
-            this.reset();
-        } else {
-            alert('Ошибка: ' + (data.message || 'Попробуйте еще раз'));
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Произошла ошибка при отправке заявки');
-    });
-});
+

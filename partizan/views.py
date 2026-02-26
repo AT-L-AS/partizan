@@ -1,34 +1,52 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.generic import ListView, DetailView, TemplateView
-from .models import *
-from .forms import *
+from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from datetime import date
+from datetime import date, timedelta, datetime
+import json
+import traceback
+
+from .models import (
+    Achievement, Category, Holiday,
+    QuickOrder, FullOrder, Review, TrainingRegistration
+)
+from .forms import QuickOrderForm, FullOrderForm, ReviewForm
 
 class HomeView(TemplateView):
+    """Главная страница"""
     template_name = 'home.html'
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['achievements'] = Achievement.objects.all()[:3]
-        context['holidays'] = Holiday.objects.filter(active=True)[:3]
-        context['reviews'] = Review.objects.filter(approved=True)
+        try:
+            context['achievements'] = Achievement.objects.all()[:3]
+            context['holidays'] = Holiday.objects.filter(active=True)[:3]
+            context['reviews'] = Review.objects.filter(approved=True)
+        except Exception as e:
+            print(f"Ошибка в HomeView: {e}")
+            context['achievements'] = []
+            context['holidays'] = []
+            context['reviews'] = []
         return context
 
 class AchievementsView(ListView):
+    """Страница достижений"""
     model = Achievement
     template_name = 'achievements.html'
     context_object_name = 'achievements'
     ordering = ['-date']
 
 class TrainingsView(TemplateView):
+    """Страница тренировок"""
     template_name = 'trainings.html'
 
 class AboutView(TemplateView):
+    """Страница О нас"""
     template_name = 'about.html'
 
 class HolidaysView(ListView):
+    """Страница праздников с фильтрацией"""
     model = Holiday
     template_name = 'holidays.html'
     context_object_name = 'holidays'
@@ -36,13 +54,11 @@ class HolidaysView(ListView):
     def get_queryset(self):
         queryset = Holiday.objects.filter(active=True)
         
-        # Фильтр по категории
         category_slug = self.kwargs.get('category_slug')
         if category_slug:
             category = get_object_or_404(Category, slug=category_slug)
             queryset = queryset.filter(category=category)
         
-        # Фильтр по возрасту
         age = self.request.GET.get('age')
         if age and age.isdigit():
             age = int(age)
@@ -54,7 +70,6 @@ class HolidaysView(ListView):
         context = super().get_context_data(**kwargs)
         context['categories'] = Category.objects.all()
         
-        # Добавляем текущий возраст в контекст для шаблона
         age = self.request.GET.get('age')
         if age and age.isdigit():
             context['selected_age'] = int(age)
@@ -71,175 +86,178 @@ class HolidayDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         holiday = self.object
         
-        from datetime import date
+        # Данные для календаря
+        context['holiday_duration'] = holiday.duration
+        context['today'] = date.today().isoformat()
+        context['two_weeks'] = (date.today() + timedelta(days=14)).isoformat()
         
-        # Получаем доступные слоты
-        available_slots = HolidayDate.objects.filter(
-            holiday=holiday,
-            date__gte=date.today()
-        ).order_by('date', 'time_slot')
+        # Получаем все заявки (они же занятые слоты) на будущие даты
+        all_bookings = FullOrder.objects.filter(
+            selected_date__gte=date.today()
+        ).values('selected_date', 'selected_time')
         
-        # Группируем по датам
-        grouped_dates = {}
+        # Создаем словарь с информацией о доступности
+        availability = {}
         
-        for slot in available_slots:
-            if slot.is_available():
-                date_str = slot.date.strftime('%d.%m.%Y')
-                weekdays = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
-                weekday = weekdays[slot.date.weekday()]
-                date_display = f"{date_str} ({weekday})"
-                
-                if date_display not in grouped_dates:
-                    grouped_dates[date_display] = []
-                
-                grouped_dates[date_display].append({
-                    'id': slot.id,
-                    'time': slot.get_time_slot_display(),
-                    'available': slot.max_bookings - slot.current_bookings,
-                    'max_bookings': slot.max_bookings,
-                    'raw_time': slot.time_slot
-                })
+        for booking in all_bookings:
+            date_str = booking['selected_date'].isoformat()
+            if date_str not in availability:
+                availability[date_str] = {}
+            
+            time_slot = booking['selected_time']
+            availability[date_str][time_slot] = availability[date_str].get(time_slot, 0) + 1
         
-        context['available_dates_grouped'] = [
-            {'date': date_str, 'slots': slots} 
-            for date_str, slots in grouped_dates.items()
-        ]
-        
+        # Добавляем информацию для JS
+        context['booked_slots_json'] = json.dumps(availability)
         context['quick_form'] = QuickOrderForm(initial={'holiday': holiday.id})
         context['full_form'] = FullOrderForm()
+        
         return context
 
 def get_available_dates(request, holiday_id):
-    """Получить доступные даты и время для праздника"""
+    """API для получения доступных дат"""
     holiday = get_object_or_404(Holiday, id=holiday_id)
     
-    # Получаем все доступные слоты
-    available_slots = HolidayDate.objects.filter(
-        holiday=holiday,
-        available=True,
-        date__gte=date.today()
-    ).order_by('date', 'time_slot')
+    # Получаем все заявки для этого праздника (можно не фильтровать по празднику,
+    # так как слоты общие для всех, но оставим для совместимости)
+    bookings = FullOrder.objects.filter(
+        selected_date__gte=date.today()
+    ).values('selected_date', 'selected_time')
     
     # Группируем по датам
-    dates_dict = {}
-    for slot in available_slots:
-        if slot.is_available():
-            date_str = slot.date.strftime('%d.%m.%Y')
-            if date_str not in dates_dict:
-                dates_dict[date_str] = []
-            
-            dates_dict[date_str].append({
-                'id': slot.id,
-                'time': slot.time_slot,
-                'available': slot.max_bookings - slot.current_bookings
-            })
+    result = {}
+    for booking in bookings:
+        date_str = booking['selected_date'].isoformat()
+        if date_str not in result:
+            result[date_str] = []
+        result[date_str].append(booking['selected_time'])
     
-    # Формируем ответ
-    result = []
-    for date_str, slots in dates_dict.items():
-        result.append({
-            'date': date_str,
-            'slots': slots
-        })
-    
-    return JsonResponse({'dates': result})
+    return JsonResponse({'booked': result})
 
+@csrf_exempt
 def create_quick_order(request):
-    if request.method == 'POST':
-        form = QuickOrderForm(request.POST)
-        if form.is_valid():
-            order = form.save(commit=False)
-            holiday_id = request.POST.get('holiday_id')
-            if holiday_id:
-                order.holiday_id = holiday_id
-                order.save()
-                return JsonResponse({'success': True, 'message': 'Заявка отправлена!'})
-        return JsonResponse({'success': False, 'errors': form.errors})
-    return JsonResponse({'success': False, 'message': 'Ошибка'})
-
-def create_full_order(request):
-    """Создание полной заявки с проверкой лимита в 2 заявки"""
-    if request.method == 'POST':
-        try:
-            form = FullOrderForm(request.POST)
-            if form.is_valid():
-                order = form.save(commit=False)
-                holiday_id = request.POST.get('holiday_id')
-                date_id = request.POST.get('date_id')
-                
-                if not holiday_id or not date_id:
-                    return JsonResponse({
-                        'success': False, 
-                        'message': 'Не выбрана дата или праздник'
-                    })
-                
-                holiday = get_object_or_404(Holiday, id=holiday_id)
-                holiday_date = get_object_or_404(HolidayDate, id=date_id)
-                
-                # Проверяем, доступен ли слот (максимум 2 заявки)
-                if holiday_date.is_available():
-                    # Проверяем, не превышен ли лимит
-                    if holiday_date.current_bookings >= holiday_date.max_bookings:
-                        holiday_date.available = False
-                        holiday_date.save()
-                        return JsonResponse({
-                            'success': False, 
-                            'message': 'К сожалению, это время уже занято. Выберите другое.'
-                        })
-                    
-                    # Сохраняем заявку
-                    order.holiday = holiday
-                    order.holiday_date = holiday_date
-                    order.save()
-                    
-                    # Увеличиваем счетчик и проверяем лимит
-                    holiday_date.current_bookings += 1
-                    if holiday_date.current_bookings >= holiday_date.max_bookings:
-                        holiday_date.available = False
-                    holiday_date.save()
-                    
-                    return JsonResponse({
-                        'success': True, 
-                        'message': 'Заявка успешно отправлена! Мы свяжемся с вами для подтверждения.'
-                    })
-                else:
-                    return JsonResponse({
-                        'success': False, 
-                        'message': 'Это время уже недоступно. Выберите другой слот.'
-                    })
-            
-            return JsonResponse({
-                'success': False, 
-                'errors': form.errors
-            })
-            
-        except Exception as e:
-            print(f"Ошибка при создании заявки: {str(e)}")
-            return JsonResponse({
-                'success': False, 
-                'message': 'Произошла ошибка при отправке заявки'
-            })
+    """Быстрая заявка"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Метод не поддерживается'})
     
-    return JsonResponse({
-        'success': False, 
-        'message': 'Метод не поддерживается'
-    })
+    try:
+        phone = request.POST.get('phone', '').strip()
+        holiday_id = request.POST.get('holiday_id')
+        
+        if not phone:
+            return JsonResponse({'success': False, 'message': 'Телефон обязателен'})
+        
+        if not holiday_id:
+            return JsonResponse({'success': False, 'message': 'ID праздника обязателен'})
+        
+        holiday = get_object_or_404(Holiday, id=holiday_id)
+        
+        order = QuickOrder.objects.create(
+            holiday=holiday,
+            phone=phone
+        )
+        
+        return JsonResponse({'success': True, 'message': 'Заявка отправлена!'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
+
+@csrf_exempt
+def create_full_order(request):
+    """Полная заявка (она же занятый слот)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Метод не поддерживается'})
+    
+    try:
+        # Получаем данные
+        full_name = request.POST.get('full_name', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        children_count = request.POST.get('children_count')
+        age_of_children = request.POST.get('age_of_children', '').strip()
+        holiday_id = request.POST.get('holiday_id')
+        selected_date = request.POST.get('selected_date')
+        selected_time = request.POST.get('selected_time')
+        notes = request.POST.get('notes', '').strip()
+        
+        # Валидация
+        missing = []
+        if not full_name: missing.append('full_name')
+        if not phone: missing.append('phone')
+        if not children_count: missing.append('children_count')
+        if not age_of_children: missing.append('age_of_children')
+        if not holiday_id: missing.append('holiday_id')
+        if not selected_date: missing.append('selected_date')
+        if not selected_time: missing.append('selected_time')
+        
+        if missing:
+            return JsonResponse({'success': False, 'message': f'Не заполнены: {", ".join(missing)}'})
+        
+        holiday = get_object_or_404(Holiday, id=holiday_id)
+        date_obj = datetime.strptime(selected_date, '%Y-%m-%d').date()
+        
+        # Проверяем режим работы
+        weekday = date_obj.weekday()
+        start_hour = int(selected_time.split(':')[0])
+        
+        if weekday < 5:  # Пн-Пт
+            if start_hour < 9 or start_hour >= 21:
+                return JsonResponse({'success': False, 'message': 'Это время вне режима работы'})
+        else:  # Сб-Вс
+            if start_hour < 10 or start_hour >= 22:
+                return JsonResponse({'success': False, 'message': 'Это время вне режима работы'})
+        
+        # Проверяем доступность (максимум 2 заявки на слот)
+        existing_bookings = FullOrder.objects.filter(
+            selected_date=date_obj,
+            selected_time=selected_time
+        ).count()
+        
+        if existing_bookings >= 2:
+            return JsonResponse({'success': False, 'message': 'Это время уже полностью занято'})
+        
+        # Определяем номер свободного зала
+        hall_number = 1
+        if existing_bookings == 1:
+            # Если есть одна заявка, смотрим какой зал занят
+            first_booking = FullOrder.objects.filter(
+                selected_date=date_obj,
+                selected_time=selected_time
+            ).first()
+            hall_number = 2 if first_booking.hall_number == 1 else 1
+        
+        # Создаем заявку (она же занятый слот)
+        order = FullOrder.objects.create(
+            holiday=holiday,
+            full_name=full_name,
+            phone=phone,
+            children_count=int(children_count),
+            age_of_children=age_of_children,
+            notes=notes,
+            selected_date=date_obj,
+            selected_time=selected_time,
+            hall_number=hall_number
+        )
+        
+        return JsonResponse({'success': True, 'message': 'Зал успешно забронирован!'})
+        
+    except Exception as e:
+        print(f"Ошибка: {traceback.format_exc()}")
+        return JsonResponse({'success': False, 'message': str(e)})
 
 def create_review(request):
+    """Создание отзыва"""
     if request.method == 'POST':
         form = ReviewForm(request.POST)
         if form.is_valid():
             form.save()
             return JsonResponse({'success': True, 'message': 'Отзыв отправлен!'})
         return JsonResponse({'success': False, 'errors': form.errors})
-    return JsonResponse({'success': False, 'message': 'Ошибка'})
+    return JsonResponse({'success': False, 'message': 'Метод не поддерживается'})
 
-# НОВЫЙ VIEW ДЛЯ ЗАЯВОК НА ТРЕНИРОВКИ
 def register_training(request):
-    """Обработка заявки на тренировку с сохранением в БД"""
+    """Запись на тренировку"""
     if request.method == 'POST':
         try:
-            # Получаем данные из формы
             parent_name = request.POST.get('parent_name', '').strip()
             phone = request.POST.get('phone', '').strip()
             child_name = request.POST.get('child_name', '').strip()
@@ -247,14 +265,9 @@ def register_training(request):
             age_group = request.POST.get('age_group', '')
             visit_type = request.POST.get('visit_type', 'trial')
             
-            # Валидация
             if not all([parent_name, phone, child_name, age, age_group]):
-                return JsonResponse({
-                    'success': False,
-                    'message': 'Заполните все поля'
-                })
+                return JsonResponse({'success': False, 'message': 'Заполните все поля'})
             
-            # Создаем запись в БД
             training_reg = TrainingRegistration.objects.create(
                 parent_name=parent_name,
                 phone=phone,
@@ -264,18 +277,9 @@ def register_training(request):
                 visit_type=visit_type
             )
             
-            print(f"✅ Заявка #{training_reg.id} сохранена в БД")
-            
-            return JsonResponse({
-                'success': True,
-                'message': 'Заявка отправлена!'
-            })
+            return JsonResponse({'success': True, 'message': 'Заявка отправлена!'})
             
         except Exception as e:
-            print(f"❌ Ошибка: {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'message': f'Ошибка: {str(e)}'
-            })
+            return JsonResponse({'success': False, 'message': str(e)})
     
     return JsonResponse({'success': False, 'message': 'Метод не поддерживается'})

@@ -2,35 +2,33 @@ from django import forms
 from .models import QuickOrder, FullOrder, Review
 
 class QuickOrderForm(forms.ModelForm):
+    """Форма быстрой заявки"""
     class Meta:
         model = QuickOrder
         fields = ['phone']
         widgets = {
             'phone': forms.TextInput(attrs={
-                'placeholder': 'Ваш телефон',
+                'placeholder': 'Ваш номер телефона',
                 'class': 'form-input',
                 'required': True
             }),
         }
 
 class FullOrderForm(forms.ModelForm):
+    """Форма полной заявки"""
     class Meta:
         model = FullOrder
-        fields = ['full_name', 'phone', 'email', 'children_count', 'age_of_children', 'notes']
+        fields = ['full_name', 'phone', 'children_count', 'age_of_children', 'notes']
         widgets = {
             'full_name': forms.TextInput(attrs={
-                'placeholder': 'ФИО',
+                'placeholder': 'Иванов Иван Иванович',
                 'class': 'form-input',
                 'required': True
             }),
             'phone': forms.TextInput(attrs={
-                'placeholder': 'Телефон',
+                'placeholder': '+7 (999) 123-45-67',
                 'class': 'form-input',
                 'required': True
-            }),
-            'email': forms.EmailInput(attrs={
-                'placeholder': 'Email',
-                'class': 'form-input'
             }),
             'children_count': forms.NumberInput(attrs={
                 'placeholder': 'Количество детей',
@@ -39,18 +37,19 @@ class FullOrderForm(forms.ModelForm):
                 'required': True
             }),
             'age_of_children': forms.TextInput(attrs={
-                'placeholder': 'Возраст детей',
+                'placeholder': 'Например: 5, 7, 10 лет',
                 'class': 'form-input',
                 'required': True
             }),
             'notes': forms.Textarea(attrs={
-                'placeholder': 'Примечания',
+                'placeholder': 'Дополнительные пожелания',
                 'class': 'form-input',
-                'rows': 4
+                'rows': 3
             }),
         }
 
 class ReviewForm(forms.ModelForm):
+    """Форма отзыва"""
     class Meta:
         model = Review
         fields = ['name', 'text', 'rating']

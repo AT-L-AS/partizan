@@ -16,8 +16,17 @@
             <div class="logo">
                 <h1><a href="{% url 'home' %}">Партизан</a></h1>
             </div>
-            <nav class="main-nav">
-                <ul>
+            
+            <!-- Бургер-кнопка -->
+            <button class="burger-menu" id="burger-menu" aria-label="Открыть меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <!-- Навигация -->
+            <nav class="main-nav" id="main-nav">
+                <ul class="nav-list">
                     <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">Главная</a></li>
                     <li><a href="{% url 'achievements' %}" class="{% if 'achievements' in request.path %}active{% endif %}">Достижения</a></li>
                     <li><a href="{% url 'trainings' %}" class="{% if 'trainings' in request.path %}active{% endif %}">Тренировки</a></li>
@@ -38,10 +47,10 @@
                 <div class="footer-section">
                     <h3>Контактная информация</h3>
                     <div class="contact-info">
-                        <p><i class="fas fa-map-marker-alt"></i> г. Москва, ул. Спортивная, д. 10</p>
+                        <p><i class="fas fa-map-marker-alt"></i> г. Ульяновск, ул. Спортивная, д. 10</p>
                         <p><i class="fas fa-phone"></i> +7 (999) 123-45-67</p>
                         <p><i class="fas fa-envelope"></i> info@partizan.ru</p>
-                        <p><i class="fas fa-clock"></i> Пн-Пт: 9:00-21:00, Сб-Вс: 10:00-19:00</p>
+                        <p><i class="fas fa-clock"></i> Пн-Пт: 9:00-21:00, Сб-Вс: 10:00-22:00</p>
                     </div>
                 </div>
 
@@ -53,7 +62,6 @@
                                 <li><a href="{% url 'home' %}"><span class="link-icon">🏠</span> Главная</a></li>
                                 <li><a href="{% url 'about' %}"><span class="link-icon">👥</span> О нас</a></li>
                                 <li><a href="{% url 'holidays' %}"><span class="link-icon">🎉</span> Праздники</a></li>
-                                </li>
                             </ul>
                         </div>
                     </div>
@@ -64,8 +72,7 @@
                             <h4>Занятия</h4>
                             <ul class="link-color">
                                 <li><a href="{% url 'trainings' %}"><span class="link-icon">⚽</span> Тренировки</a></li>
-                                <li><a href="{% url 'achievements' %}"><span class="link-icon">🏆</span> Достижения</a>
-                                </li>
+                                <li><a href="{% url 'achievements' %}"><span class="link-icon">🏆</span> Достижения</a></li>
                             </ul>
                         </div>
                     </div>
@@ -77,8 +84,6 @@
             </div>
         </div>
     </footer>
-
     <script src="{% static 'js/script.js' %}"></script>
 </body>
-
 </html>

@@ -1,7 +1,6 @@
-from .models import Category, Contact
+from .models import Category
 
 def categories(request):
     return {
         'all_categories': Category.objects.all(),
-        'contact_info': Contact.objects.first(),
     }
