@@ -133,13 +133,6 @@
                             <h4 class="hol_time_slots_title">Доступное время:</h4>
                             <div id="time-slots" class="hol_time_slots"></div>
                         </div>
-                        
-                        <div class="hol_schedule_info">
-                            <p><i class="fas fa-clock"></i> <strong>Режим работы:</strong> Пн-Пт 9:00-21:00, Сб-Вс 10:00-19:00</p>
-                            <p><i class="fas fa-info-circle"></i> <strong>Длительность:</strong> {{ holiday.duration }}</p>
-                            <p><i class="fas fa-users"></i> <strong>Максимум:</strong> 2 заявки на одно время</p>
-                            <p><i class="fas fa-calendar-alt"></i> <strong>Бронирование:</strong> на 14 дней вперед</p>
-                        </div>
                     </div>
                     
                     <div class="hol_form_group">
@@ -819,10 +812,7 @@ showTimeSlots(dateStr) {
     const [year, month, day] = dateStr.split('-').map(Number);
     const date = new Date(year, month - 1, day);
     const weekday = date.getDay();
-    
     const is4Hours = this.holidayDuration && this.holidayDuration.includes('4');
-    
-    // Фильтруем слоты по режиму работы
     const availableSlots = this.availableTimeSlots.filter(slot => {
         const startHour = parseInt(slot.value.split(':')[0]);
         
@@ -832,45 +822,27 @@ showTimeSlots(dateStr) {
             return startHour >= 9 && startHour < 21;
         }
     });
-    
-    // Получаем занятость для этой даты
     const bookingsForDate = this.bookedSlots[dateStr] || {};
-    
     let slotsHtml = '';
-    
     if (availableSlots.length === 0) {
         slotsHtml = '<p class="hol_no_slots">Нет доступного времени для этой даты</p>';
     } else {
         availableSlots.forEach(slot => {
             const bookedCount = bookingsForDate[slot.value] || 0;
-            
-            // Проверяем доступность с учетом логики пересечений
-            let isAvailable = false;
+                        let isAvailable = false;
             let remainingText = '';
-            
             if (is4Hours && (slot.value.includes('13') || slot.value.includes('17') || 
                              slot.value.includes('21') || slot.value.includes('14') || 
                              slot.value.includes('18') || slot.value.includes('22'))) {
-                // Для 4-часовых слотов
                 const [start, end] = slot.value.split('-').map(t => parseInt(t.split(':')[0]));
                 const slot1 = `${start}:00-${start+2}:00`;
                 const slot2 = `${start+2}:00-${end}:00`;
-                
                 const booked1 = bookingsForDate[slot1] || 0;
                 const booked2 = bookingsForDate[slot2] || 0;
-                
-                // Логика доступности 4-часового слота:
-                // 1. Если любой из 2-часовых слотов полностью занят (2 заявки) -> 4-часовой недоступен
-                // 2. Если оба 2-часовых слота заняты хотя бы по 1 разу, но в разных залах -> 1 место
-                // 3. Если оба 2-часовых слота заняты в одном зале -> 1 место (другой зал свободен)
-                
                 if (booked1 >= 2 || booked2 >= 2) {
                     isAvailable = false;
                     remainingText = 'оба зала заняты';
                 } else if (booked1 >= 1 && booked2 >= 1) {
-                    // В реальности нужно проверять номера залов, но для упрощения:
-                    // Если оба слота заняты хотя бы по разу, то один зал точно занят всё время
-                    // Значит свободен только один зал
                     isAvailable = true;
                     remainingText = '1 зал свободен';
                 } else {
@@ -879,15 +851,12 @@ showTimeSlots(dateStr) {
                     remainingText = `${2 - maxBooked} зала свободно`;
                 }
             } else {
-                // Для 2-часовых слотов
                 isAvailable = bookedCount < 2;
                 remainingText = isAvailable ? `${2 - bookedCount} зала свободно` : 'оба зала заняты';
             }
-            
             let btnClass = 'hol_time_slot_btn';
             if (!isAvailable) btnClass += ' hol_disabled';
             if (this.selectedTimeSlot === slot.value) btnClass += ' hol_selected';
-            
             slotsHtml += `
                 <button type="button" class="${btnClass}" 
                         data-time="${slot.value}"

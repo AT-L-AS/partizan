@@ -237,7 +237,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const mainNav = document.getElementById('main-nav');
     
     if (burgerMenu && mainNav) {
-        burgerMenu.addEventListener('click', function() {
+        console.log('Бургер меню найдено'); // Для отладки
+        
+        burgerMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
             this.classList.toggle('active');
             mainNav.classList.toggle('active');
             
@@ -261,7 +264,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Закрытие меню при клике вне его
         document.addEventListener('click', function(event) {
-            if (!mainNav.contains(event.target) && !burgerMenu.contains(event.target)) {
+            if (mainNav.classList.contains('active') && 
+                !mainNav.contains(event.target) && 
+                !burgerMenu.contains(event.target)) {
                 burgerMenu.classList.remove('active');
                 mainNav.classList.remove('active');
                 document.body.style.overflow = '';
@@ -270,22 +275,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Обработка изменения размера окна
         window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
+            if (window.innerWidth > 768 && mainNav.classList.contains('active')) {
                 burgerMenu.classList.remove('active');
                 mainNav.classList.remove('active');
                 document.body.style.overflow = '';
             }
         });
-    }
-
-    // ========== СЛАЙДЕР ВОЗРАСТА (HOLIDAY) ==========
-    const ageSlider = document.getElementById('child-age-slider');
-    const ageValue = document.getElementById('holid-age-value');
-    
-    if (ageSlider) {
-        ageSlider.addEventListener('input', function() {
-            ageValue.textContent = this.value + ' лет';
-        });
+    } else {
+        console.log('Бургер меню не найдено');
     }
 
     // ========== ФИЛЬТР ВОЗРАСТА (HOLIDAY) ==========
@@ -334,4 +331,3 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
-

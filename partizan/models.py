@@ -145,7 +145,6 @@ class QuickOrder(models.Model):
         return f"{self.holiday.title} - {self.phone}"
 
 class FullOrder(models.Model):
-    """ПОЛНАЯ ЗАЯВКА = ЗАНЯТЫЙ СЛОТ"""
     holiday = models.ForeignKey(Holiday, on_delete=models.CASCADE, verbose_name="Праздник")
     full_name = models.CharField(max_length=200, verbose_name="ФИО")
     phone = models.CharField(max_length=20, verbose_name="Телефон")

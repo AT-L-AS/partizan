@@ -169,7 +169,6 @@ def create_full_order(request):
         return JsonResponse({'success': False, 'message': 'Метод не поддерживается'})
     
     try:
-        # Получаем данные
         full_name = request.POST.get('full_name', '').strip()
         phone = request.POST.get('phone', '').strip()
         children_count = request.POST.get('children_count')
@@ -179,7 +178,6 @@ def create_full_order(request):
         selected_time = request.POST.get('selected_time')
         notes = request.POST.get('notes', '').strip()
         
-        # Валидация
         missing = []
         if not full_name: missing.append('full_name')
         if not phone: missing.append('phone')
