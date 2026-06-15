@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Регистрация - Партизан{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h2 class="auth-title">Регистрация</h2>
+                <p class="auth-subtitle">Создайте аккаунт для управления заявками</p>
+            </div>
+
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+
+                <div class="auth-field">
+                    <label for="{{ form.username.id_for_label }}">Логин <span class="required">*</span></label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                    <div class="auth-error">{{ form.username.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field">
+                    <label for="id_email">Email <span class="required">*</span></label>
+                    <input type="email" name="email" class="auth-input" placeholder="Ваш email" id="id_email" required>
+                </div>
+
+                <div class="auth-field">
+                    <label for="{{ form.phone.id_for_label }}">Телефон <span class="required">*</span></label>
+                    {{ form.phone }}
+                    {% if form.phone.errors %}
+                    <div class="auth-error">{{ form.phone.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field password-field">
+                    <label for="id_password1">Пароль <span class="required">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input type="password" name="{{ form.password1.name }}" class="auth-input"
+                            placeholder="Введите пароль" id="id_password1"
+                            value="{{ form.password1.value|default:'' }}" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('id_password1', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password1.errors %}
+                    <div class="auth-error">{{ form.password1.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="auth-field password-field">
+                    <label for="id_password2">Подтверждение пароля <span class="required">*</span></label>
+                    <div class="password-input-wrapper">
+                        <input type="password" name="{{ form.password2.name }}" class="auth-input"
+                            placeholder="Подтвердите пароль" id="id_password2"
+                            value="{{ form.password2.value|default:'' }}" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword('id_password2', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    {% if form.password2.errors %}
+                    <div class="auth-error">{{ form.password2.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="auth-btn">Зарегистрироваться</button>
+            </form>
+
+            <div class="auth-footer">
+                <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

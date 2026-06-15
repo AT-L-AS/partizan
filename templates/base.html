@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Партизан - {% block title %}Главная{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1><a href="{% url 'home' %}">Партизан</a></h1>
+            </div>
+
+            <!-- Бургер-кнопка -->
+            <button class="burger-menu" id="burger-menu" aria-label="Открыть меню">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <!-- Навигация -->
+            <nav class="main-nav" id="main-nav">
+                <ul class="nav-list">
+                    <li><a href="{% url 'home' %}" class="{% if request.path == '/' %}active{% endif %}">Главная</a>
+                    </li>
+                    <li><a href="{% url 'achievements' %}"
+                            class="{% if 'achievements' in request.path %}active{% endif %}">Достижения</a></li>
+                    <li><a href="{% url 'trainings' %}"
+                            class="{% if 'trainings' in request.path %}active{% endif %}">Тренировки</a></li>
+                    <li><a href="{% url 'about' %}" class="{% if 'about' in request.path %}active{% endif %}">О нас</a>
+                    </li>
+                    <li><a href="{% url 'holidays' %}"
+                            class="{% if 'holidays' in request.path %}active{% endif %}">Праздники</a></li>
+
+                    {% if user.is_authenticated %}
+                    <li class="user-menu">
+                        <a href="{% url 'profile' %}"
+                            class="user-btn {% if 'profile' in request.path %}active{% endif %}">
+                            <i class="fas fa-user-circle"></i> {{ user.username }}
+                        </a>
+                        <a href="{% url 'logout' %}" class="logout-btn" title="Выйти">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                        <li class="auth-item">
+                            <a href="{% url 'login' %}"
+                                class="auth-btn {% if 'login' in request.path %}active{% endif %}">
+                                <i class="fas fa-sign-in-alt"></i> Вход
+                            </a>
+                        </li>
+                        <li class="auth-item">
+                            <a href="{% url 'register' %}"
+                                class="auth-btn {% if 'register' in request.path %}active{% endif %}">
+                                <i class="fas fa-user-plus"></i> Регистрация
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <!-- О компании -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <a href="{% url 'home' %}">Партизан</a>
+                    </div>
+                    <p class="footer-about">Развлекательный центр для всей семьи. Проводим праздники, тренировки и
+                        мероприятия для детей любого возраста.</p>
+                    <div class="social-section">
+                        <h4>Мы в соцсетях</h4>
+                        <div class="social-links">
+                            <a href="#" class="social-link"><i class="fab fa-vk"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-telegram"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                            <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Быстрые ссылки -->
+                <div class="footer-section">
+                    <h3>Навигация</h3>
+                    <div class="footer-links">
+                        <div class="link-group">
+                            <ul>
+                                <li><a href="{% url 'home' %}"><i class="fas fa-chevron-right"></i> Главная</a></li>
+                                <li><a href="{% url 'about' %}"><i class="fas fa-chevron-right"></i> О нас</a></li>
+                                <li><a href="{% url 'holidays' %}"><i class="fas fa-chevron-right"></i> Праздники</a>
+                                </li>
+                                <li><a href="{% url 'trainings' %}"><i class="fas fa-chevron-right"></i> Тренировки</a>
+                                </li>
+                                <li><a href="{% url 'achievements' %}"><i class="fas fa-chevron-right"></i>
+                                        Достижения</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Контакты -->
+                <div class="footer-section">
+                    <h3>Контакты</h3>
+                    <div class="contact-info">
+                        <p><i class="fas fa-map-marker-alt"></i> г. Ульяновск, ул. Спортивная, д. 10</p>
+                        <p><i class="fas fa-phone"></i> +7 (999) 123-45-67</p>
+                        <p><i class="fas fa-envelope"></i> info@partizan.ru</p>
+                        <p><i class="fas fa-clock"></i> Пн-Пт: 9:00-21:00, Сб-Вс: 10:00-22:00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2026 Развлекательный центр "Партизан". Все права защищены.</p>
+                    <div class="footer-legal">
+                        <a href="#">Политика конфиденциальности</a>
+                        <a href="#">Пользовательское соглашение</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+
+</html>

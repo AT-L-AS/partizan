@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ holiday.title }} - Партизан{% endblock %}
+
+{% block content %}
+<section class="hol_section">
+    <div class="hol_container">
+        <div class="hol_back_button">
+            <a href="{% url 'holidays' %}" class="hol_back_btn">
+                <i class="fas fa-arrow-left"></i>
+                Назад к праздникам
+            </a>
+        </div>
+
+        <div class="hol_header">
+            {% if holiday.image %}
+            <div class="hol_image_wrapper">
+                <img src="{{ holiday.image.url }}" alt="{{ holiday.title }}" class="hol_image">
+            </div>
+            {% endif %}
+
+            <div class="hol_info">
+                <h1 class="hol_title">{{ holiday.title }}</h1>
+                <p class="hol_category">{{ holiday.category.name }}</p>
+
+                <div class="hol_meta">
+                    <div class="hol_meta_item">
+                        <i class="far fa-clock"></i>
+                        <span>{{ holiday.duration }}</span>
+                    </div>
+                    <div class="hol_meta_item">
+                        <i class="fas fa-child"></i>
+                        <span>{{ holiday.min_age }}-{{ holiday.max_age }} лет</span>
+                    </div>
+                    <div class="hol_meta_item">
+                        <i class="fas fa-users"></i>
+                        <span>До {{ holiday.max_children }} детей</span>
+                    </div>
+                    <div class="hol_meta_item hol_price">
+                        <i class="fas fa-ruble-sign"></i>
+                        <span>{{ holiday.price }} ₽</span>
+                    </div>
+                </div>
+
+                <div class="hol_description">
+                    {{ holiday.description|linebreaks }}
+                </div>
+            </div>
+        </div>
+
+        <!-- БЛОК БРОНИРОВАНИЯ -->
+        <div class="hol_booking_section">
+            <h2 class="hol_booking_title">Забронировать праздник</h2>
+
+            <!-- Вкладки: Быстрая заявка / Полная заявка -->
+            <div class="hol_tabs">
+                <button class="hol_tab_btn active" data-tab="quick">Быстрая заявка</button>
+                <button class="hol_tab_btn" data-tab="full">Полная заявка</button>
+            </div>
+
+            <!-- Быстрая заявка -->
+            <div id="quick-tab" class="hol_tab_content active">
+                <form id="quick-order-form" class="hol_form">
+                    {% csrf_token %}
+                    <input type="hidden" name="holiday_id" value="{{ holiday.id }}">
+
+                    <div class="hol_form_group">
+                        <label for="quick-phone" class="hol_label">Номер телефона *</label>
+                        <input type="tel" id="quick-phone" name="phone" placeholder="+7 (999) 123-45-67" required
+                            class="hol_input">
+                    </div>
+
+                    <div class="hol_form_info">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Мы перезвоним вам в течение 15 минут</span>
+                    </div>
+
+                    <button type="submit" class="hol_submit_btn">Заказать звонок</button>
+                </form>
+                <div id="quick-order-message" class="hol_message"></div>
+            </div>
+
+            <!-- Полная заявка с календарем -->
+            <div id="full-tab" class="hol_tab_content">
+                <form id="full-order-form" class="hol_form">
+                    {% csrf_token %}
+                    <input type="hidden" name="holiday_id" value="{{ holiday.id }}">
+                    <input type="hidden" name="selected_date" id="selected-date">
+                    <input type="hidden" name="selected_time" id="selected-time">
+
+                    <!-- ПОЛЯ ДЛЯ ЗАПОЛНЕНИЯ - ВСЕГДА ВИДИМЫ -->
+                    <div class="hol_form_row">
+                        <div class="hol_form_group">
+                            <label for="full-name" class="hol_label">ФИО *</label>
+                            <input type="text" id="full-name" name="full_name" placeholder="Иванов Иван Иванович"
+                                required class="hol_input">
+                        </div>
+                        <div class="hol_form_row">
+                            <div class="hol_form_group">
+                                <label for="email" class="hol_label">Email</label>
+                                <input type="email" id="email" name="email" placeholder="your@email.com"
+                                    class="hol_input">
+                            </div>
+                        </div>
+                        <div class="hol_form_group">
+                            <label for="full-phone" class="hol_label">Номер телефона *</label>
+                            <input type="tel" id="full-phone" name="phone" placeholder="+7 (999) 123-45-67" required
+                                class="hol_input">
+                        </div>
+                    </div>
+
+                    <div class="hol_form_row">
+                        <div class="hol_form_group">
+                            <label for="children-count" class="hol_label">Количество детей *</label>
+                            <input type="number" id="children-count" name="children_count" min="1"
+                                max="{{ holiday.max_children }}" placeholder="Например: 5" required class="hol_input">
+                        </div>
+
+                        <div class="hol_form_group">
+                            <label for="age-of-children" class="hol_label">Возраст детей *</label>
+                            <input type="text" id="age-of-children" name="age_of_children"
+                                placeholder="Например: 5, 7, 10 лет" required class="hol_input">
+                        </div>
+                    </div>
+
+                    <!-- КАЛЕНДАРЬ -->
+                    <div class="hol_calendar_block">
+                        <h3 class="hol_calendar_title">Выберите дату и время</h3>
+
+                        <div class="hol_calendar_container">
+                            <div class="hol_calendar_header">
+                                <button type="button" class="hol_calendar_nav" id="prev-month">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="current-month" class="hol_calendar_month"></span>
+                                <button type="button" class="hol_calendar_nav" id="next-month">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+
+                            <div class="hol_calendar_weekdays">
+                                <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+                            </div>
+
+                            <div id="calendar-days" class="hol_calendar_days"></div>
+                        </div>
+
+                        <div id="time-slots-container" class="hol_time_slots_container" style="display: none;">
+                            <h4 class="hol_time_slots_title">Доступное время:</h4>
+                            <div id="time-slots" class="hol_time_slots"></div>
+                        </div>
+                    </div>
+
+                    <div class="hol_form_group">
+                        <label for="notes" class="hol_label">Дополнительные пожелания</label>
+                        <textarea id="notes" name="notes" placeholder="Особые пожелания, аллергии, предпочтения..."
+                            class="hol_input" rows="3"></textarea>
+                    </div>
+
+                    <button type="submit" class="hol_submit_btn">Отправить заявку</button>
+                </form>
+                <div id="full-order-message" class="hol_message"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Данные для JavaScript -->
+<div id="holiday-data" data-duration="{{ holiday.duration }}" data-max-children="{{ holiday.max_children }}"
+    data-booked-slots='{{ booked_slots_json|safe }}' style="display: none;"></div>
+{% endblock %}

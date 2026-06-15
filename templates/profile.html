@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Личный кабинет - Партизан{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="profile-wrapper">
+    <div class="profile-container">
+        <div class="profile-header">
+            <h1 class="profile-title">Личный кабинет</h1>
+            <p class="profile-welcome">Добро пожаловать, <span>{{ user.username }}</span>!</p>
+        </div>
+
+        <div class="profile-grid">
+            <!-- Карточка с данными пользователя -->
+            <div class="profile-card">
+                <div class="profile-card-header">
+                    <i class="fas fa-user-circle"></i>
+                    <h2>Ваши данные</h2>
+                </div>
+                <div class="profile-card-content">
+                    <div class="profile-info">
+                        <div class="info-row">
+                            <span class="info-label">Логин:</span>
+                            <span class="info-value">{{ user.username }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Дата регистрации:</span>
+                            <span class="info-value">{{ user.date_joined|date:"d.m.Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="profile-card-footer">
+                    <a href="{% url 'logout' %}" class="profile-btn profile-btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Выйти
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Блок с заявками пользователя -->
+        <div class="profile-orders">
+            <h2 class="profile-orders-title">Мои заявки на праздники</h2>
+
+            {% if user_orders %}
+            <div class="orders-list">
+                {% for order in user_orders %}
+                <div class="order-card {% if order.processed %}order-processed{% endif %}">
+                    <div class="order-header">
+                        <div class="order-info">
+                            <h3>{{ order.holiday.title }}</h3>
+                            <span class="order-date">{{ order.selected_date|date:"d.m.Y" }} {{ order.selected_time
+                                }}</span>
+                        </div>
+                        <div class="order-status">
+                            {% if order.processed %}
+                            <span class="status-badge status-approved">Одобрено ✓</span>
+                            {% else %}
+                            <span class="status-badge status-pending">На рассмотрении</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="order-details">
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-user"></i> ФИО:</span>
+                            <span class="detail-value">{{ order.full_name }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-phone"></i> Телефон:</span>
+                            <span class="detail-value">{{ order.phone }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-child"></i> Дети:</span>
+                            <span class="detail-value">{{ order.children_count }} ({{ order.age_of_children }})</span>
+                        </div>
+                        {% if order.notes %}
+                        <div class="detail-row">
+                            <span class="detail-label"><i class="fas fa-comment"></i> Примечания:</span>
+                            <span class="detail-value">{{ order.notes }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="order-footer">
+                        {% if not order.processed %}
+                        <button class="cancel-order-btn" data-order-id="{{ order.id }}">
+                            <i class="fas fa-times"></i> Отменить заявку
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="profile-empty">
+                <i class="fas fa-calendar-alt"></i>
+                <p>У вас пока нет заявок на праздники</p>
+                <a href="{% url 'holidays' %}" class="profile-btn profile-btn-primary">
+                    <i class="fas fa-birthday-cake"></i> Выбрать праздник
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Функция для получения CSRF токена
+        function getCsrfToken() {
+            return document.querySelector('[name=csrfmiddlewaretoken]').value;
+        }
+
+        // Функция для показа уведомлений
+        function showNotification(message, type) {
+            // Проверяем, существует ли уже контейнер
+            let notificationContainer = document.querySelector('.hol_notification_container');
+
+            if (!notificationContainer) {
+                notificationContainer = document.createElement('div');
+                notificationContainer.className = 'hol_notification_container';
+                document.body.appendChild(notificationContainer);
+            }
+
+            const notification = document.createElement('div');
+            notification.className = `hol_notification hol_notification_${type}`;
+            notification.innerHTML = `
+            <div class="hol_notification_icon">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+            </div>
+            <div class="hol_notification_content">
+                <div class="hol_notification_title">${type === 'success' ? 'Успешно!' : 'Внимание!'}</div>
+                <div class="hol_notification_message">${message}</div>
+            </div>
+            <button class="hol_notification_close" onclick="this.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+            notificationContainer.appendChild(notification);
+
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+
+            setTimeout(() => notification.classList.add('hol_notification_show'), 10);
+        }
+
+        // ========== ОТМЕНА ЗАЯВКИ ==========
+        const cancelButtons = document.querySelectorAll('.cancel-order-btn');
+        console.log('Найдено кнопок отмены:', cancelButtons.length); // Отладка
+
+        cancelButtons.forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                const orderId = this.dataset.orderId;
+
+                console.log('Клик по кнопке отмены, orderId:', orderId); // Отладка
+
+                if (!confirm('Вы уверены, что хотите отменить заявку?')) {
+                    return;
+                }
+
+                // Сохраняем исходный текст кнопки
+                const originalText = this.innerHTML;
+
+                // Блокируем кнопку и показываем загрузку
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отмена...';
+
+                // Получаем CSRF токен
+                const csrfToken = getCsrfToken();
+
+                if (!csrfToken) {
+                    showNotification('Ошибка: CSRF токен не найден', 'error');
+                    this.disabled = false;
+                    this.innerHTML = originalText;
+                    return;
+                }
+
+                // Отправляем запрос на отмену
+                fetch('/api/cancel-order/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        order_id: orderId
+                    })
+                })
+                    .then(response => {
+                        console.log('Response status:', response.status); // Отладка
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data); // Отладка
+
+                        if (data.success) {
+                            showNotification('Заявка успешно отменена', 'success');
+                            // Перезагружаем страницу через 1 секунду
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showNotification(data.message || 'Ошибка при отмене заявки', 'error');
+                            // Разблокируем кнопку
+                            this.disabled = false;
+                            this.innerHTML = originalText;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                        showNotification('Произошла ошибка при отмене заявки', 'error');
+                        // Разблокируем кнопку
+                        this.disabled = false;
+                        this.innerHTML = originalText;
+                    });
+            });
+        });
+
+    });
+</script>
+
+<style>
+    /* Дополнительные стили для disabled кнопки */
+    .cancel-order-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+{% endblock %}
+{% endblock %}
